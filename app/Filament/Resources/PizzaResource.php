@@ -15,37 +15,43 @@ class PizzaResource extends Resource
     protected static ?string $model = Pizza::class;
 
     protected static ?string $navigationLabel = 'Pizza\'s';
-    
+    protected static ?string $navigationIcon = 'heroicon-o-cake';
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255)
-                    ->label('Naam'),
+        return $form->schema([
+            Forms\Components\TextInput::make('name')
+                ->required()
+                ->maxLength(255)
+                ->label('Naam'),
 
-                Forms\Components\Textarea::make('beschrijving')
-                    ->rows(3)
-                    ->label('Beschrijving'),
+            Forms\Components\Textarea::make('beschrijving')
+                ->rows(3)
+                ->label('Beschrijving'),
 
-                Forms\Components\TextInput::make('prijs')
-                    ->numeric()
-                    ->required()
-                    ->step(0.01)
-                    ->label('Prijs (€)'),
+            Forms\Components\TextInput::make('prijs')
+                ->numeric()
+                ->required()
+                ->step(0.01)
+                ->label('Verkoopprijs (€)'),
 
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'op-voorraad' => 'Op voorraad',
-                        'in concept' => 'In concept',
-                        'niet-op-voorraad' => 'Niet op voorraad',
-                    ])
-                    ->required()
-                    ->default('op-voorraad')
-                    ->label('Status'),
-            ]);
+            Forms\Components\Select::make('status')
+                ->options([
+                    'op-voorraad' => 'Op voorraad',
+                    'in concept' => 'In concept',
+                    'niet-op-voorraad' => 'Niet op voorraad',
+                ])
+                ->required()
+                ->default('op-voorraad')
+                ->label('Status'),
+
+            Forms\Components\Select::make('ingredients')
+                ->multiple()
+                ->relationship('ingredients', 'name')
+                ->preload()
+                ->searchable()
+                ->label('Ingrediënten'),
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -58,16 +64,22 @@ class PizzaResource extends Resource
                     ->label('Naam'),
 
                 Tables\Columns\TextColumn::make('beschrijving')
-                    ->limit(50)
+                    ->limit(40)
                     ->label('Beschrijving'),
 
                 Tables\Columns\TextColumn::make('prijs')
+                    ->money('EUR')
                     ->sortable()
-                    ->label('Prijs (€)'),
+                    ->label('Verkoopprijs'),
+                    
+                Tables\Columns\TextColumn::make('kostprijs')
+                    ->label('Kostprijs')
+                    ->money('EUR')
+                    ->getStateUsing(fn (Pizza $record) => $record->kostprijs),
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'op-voorraad' => 'success',
                         'in concept' => 'warning',
                         'niet-op-voorraad' => 'danger',

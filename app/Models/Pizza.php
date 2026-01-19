@@ -16,14 +16,11 @@ class Pizza extends Model
         'status',
     ];
 
-/*
     public function ingredients()
     {
-        return $this->belongsToMany(Ingredient::class, 'ingredient_pizza', 'pizza_id', 'ingredient_id')
-                    ->withTimestamps();
+        return $this->belongsToMany(Ingredient::class);
     }
-*/
-    
+
     public function scopeAvailable($query)
     {
         return $query->where('status', 'op-voorraad');
