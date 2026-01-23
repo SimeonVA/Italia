@@ -18,18 +18,29 @@ class Order extends Model
 
     public function getRevenueAttribute(): float
     {
-        return $this->pizzas->sum(function ($pizza) {
-            return $pizza->price * $pizza->pivot->quantity;
-        });
+        if ($this->status !== 'completed') {
+            return 0;
+        }
+
+        return $this->pizzas->sum(
+            fn ($pizza) => $pizza->prijs * $pizza->pivot->quantity
+        );
     }
 
     public function getCostAttribute(): float
     {
-        return $this->pizzas->sum(function ($pizza) {
-            return $pizza->cost_price * $pizza->pivot->quantity;
-        });
+        if ($this->status !== 'completed') {
+            return 0;
+        }
+
+        return $this->pizzas->sum(
+            fn ($pizza) => $pizza->cost_price * $pizza->pivot->quantity
+        );
     }
 
+    /**
+     * Winst
+     */
     public function getProfitAttribute(): float
     {
         return $this->revenue - $this->cost;
