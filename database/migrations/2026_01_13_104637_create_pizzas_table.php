@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('pizzas', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique(); 
             $table->text('beschrijving')->nullable();
             $table->decimal('prijs', 8, 2); 
             $table->enum('status', ['op-voorraad', 'in concept', 'niet-op-voorraad'])->default('op-voorraad');

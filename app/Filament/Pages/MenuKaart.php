@@ -7,10 +7,10 @@ use App\Models\Pizza;
 
 class MenuKaart extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document-text'; 
+    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-document-text'; 
     protected static ?string $navigationLabel = 'Menukaart';
     protected static ?string $slug = 'menu-kaart';
-    protected static string $view = 'filament.pages.menu-kaart';
+    protected string $view = 'filament.pages.menu-kaart';
 
     public array $pizzas = [];
 

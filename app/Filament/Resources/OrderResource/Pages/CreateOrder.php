@@ -9,19 +9,19 @@ class CreateOrder extends CreateRecord
 {
     protected static string $resource = OrderResource::class;
 
-    protected function afterCreate(): void
+    protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $this->syncPizzas();
+        $this->selectedPizzas = $data['selected_pizzas'] ?? [];
+        unset($data['selected_pizzas']);
+        return $data;
     }
 
-    protected function syncPizzas(): void
+    protected function afterCreate(): void
     {
-        $items = collect($this->data['items'])
-            ->mapWithKeys(fn ($item) => [
-                $item['pizza_id'] => ['quantity' => $item['quantity']],
-            ])
-            ->toArray();
-
-        $this->record->pizzas()->sync($items);
+        $attach = [];
+        foreach ($this->selectedPizzas as $item) {
+            $attach[$item['pizza_id']] = ['quantity' => $item['quantity']];
+        }
+        $this->record->pizzas()->attach($attach);
     }
 }
