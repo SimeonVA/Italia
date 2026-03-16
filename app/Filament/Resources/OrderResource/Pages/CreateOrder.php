@@ -9,19 +9,15 @@ class CreateOrder extends CreateRecord
 {
     protected static string $resource = OrderResource::class;
 
-    protected function mutateFormDataBeforeCreate(array $data): array
-    {
-        $this->selectedPizzas = $data['selected_pizzas'] ?? [];
-        unset($data['selected_pizzas']);
-        return $data;
-    }
-
     protected function afterCreate(): void
     {
+        $items = $this->data['items'] ?? [];
+        
         $attach = [];
-        foreach ($this->selectedPizzas as $item) {
+        foreach ($items as $item) {
             $attach[$item['pizza_id']] = ['quantity' => $item['quantity']];
         }
+        
         $this->record->pizzas()->attach($attach);
     }
 }

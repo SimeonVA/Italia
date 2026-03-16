@@ -22,7 +22,7 @@ class OrderForm
                 ->default('pending')
                 ->required(),
 
-            Repeater::make('selected_pizzas')  // ← Gewoon een form veld naam
+            Repeater::make('items')
                 ->label('Bestelde pizzas')
                 ->schema([
                     Select::make('pizza_id')

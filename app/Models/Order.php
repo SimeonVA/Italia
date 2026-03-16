@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Order extends Model
 {
-    protected $fillable = ['status'];
+    // Zorg dat 'customer_name' en 'status' in je tabel staan
+    protected $fillable = ['status', 'customer_name'];
 
     public function pizzas(): BelongsToMany
     {
@@ -38,9 +39,6 @@ class Order extends Model
         );
     }
 
-    /**
-     * Winst
-     */
     public function getProfitAttribute(): float
     {
         return $this->revenue - $this->cost;

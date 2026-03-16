@@ -4,26 +4,38 @@ namespace App\Filament\Resources;
 
 use BackedEnum;
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
     public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                //
+        return $schema
+            ->components([
+                TextInput::make('name')
+                    ->required()
+                    ->label('Naam'),
+
+                TextInput::make('email')
+                    ->email()
+                    ->required()
+                    ->label('Email'),
+
+                TextInput::make('password')
+                    ->password()
+                    ->required(fn ($record) => $record === null)
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->label('Wachtwoord'),
             ]);
     }
 
@@ -31,26 +43,25 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                //
-            ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
-    }
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable()
+                    ->label('Naam'),
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
+                TextColumn::make('email')
+                    ->searchable()
+                    ->sortable()
+                    ->label('Email'),
+
+                TextColumn::make('created_at')
+                    ->dateTime('d-m-Y')
+                    ->sortable()
+                    ->label('Aangemaakt'),
+            ])
+            ->recordUrl(fn ($record) => route('filament.admin.resources.users.edit', $record))
+            ->bulkActions([
+                DeleteBulkAction::make(),
+            ]);
     }
 
     public static function getPages(): array
