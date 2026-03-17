@@ -2,21 +2,19 @@
 
 use App\Models\Ingredient;
 use App\Models\Pizza;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
-
-test('de verkoopprijs van een pizza is hoger dan de inkoop van ingrediënten', function () {
-    $kaas = Ingredient::create(['name' => 'Mozzarella', 'inkoopprijs' => 2.50]);
-    $deeg = Ingredient::create(['name' => 'Deeg', 'inkoopprijs' => 1.00]);
-
-    $pizza = Pizza::create([
-        'name' => 'Margherita',
-        'prijs' => 12.50,
-        'status' => 'op-voorraad'
-    ]);
-
-    $totaleInkoop = $kaas->inkoopprijs + $deeg->inkoopprijs;
+test('ingredient heeft naam en inkoopprijs', function () {
+    $ingredient = Ingredient::factory()->create();
     
-    expect($pizza->prijs)->toBeGreaterThan($totaleInkoop);
+    expect($ingredient->name)->not->toBeEmpty();
+    expect($ingredient->inkoopprijs)->toBeGreaterThan(0);
+});
+
+test('ingredient kan aan meerdere pizzas gekoppeld worden', function () {
+    $ingredient = Ingredient::factory()->create();
+    $pizzas = Pizza::factory()->count(3)->create();
+    
+    $ingredient->pizzas()->attach($pizzas);
+    
+    expect($ingredient->pizzas)->toHaveCount(3);
 });

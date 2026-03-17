@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\OrderResource\Forms;
+namespace App\Filament\Resources\OrderResource\Schemas;
 
 use App\Models\Pizza;
 use Filament\Forms\Components\Select;

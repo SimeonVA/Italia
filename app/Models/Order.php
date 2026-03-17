@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Order extends Model
 {
-    // Zorg dat 'customer_name' en 'status' in je tabel staan
+    use HasFactory;
+
     protected $fillable = ['status', 'customer_name'];
 
     public function pizzas(): BelongsToMany

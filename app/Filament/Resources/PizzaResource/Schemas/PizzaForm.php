@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\PizzaResource\Forms;
+namespace App\Filament\Resources\PizzaResource\Schemas;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
