@@ -14,7 +14,7 @@ class Ingredient extends Model
 
     protected $fillable = [
         'name',
-        'inkoopprijs',
+        'inkoopprijs', 
     ]; 
 
     public function pizzas(): BelongsToMany

@@ -2,19 +2,27 @@
 
 use App\Models\Ingredient;
 use App\Models\Pizza;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-test('ingredient heeft naam en inkoopprijs', function () {
-    $ingredient = Ingredient::factory()->create();
+uses(RefreshDatabase::class);
+
+test('ingredient wordt correct opgeslagen', function () {
+    $ingredient = Ingredient::factory()->create([
+        'name' => 'Mozzarella',
+        'inkoopprijs' => 2.50,
+    ]);
     
-    expect($ingredient->name)->not->toBeEmpty();
-    expect($ingredient->inkoopprijs)->toBeGreaterThan(0);
+    expect($ingredient->name)->toBe('Mozzarella');
+    expect($ingredient->inkoopprijs)->toBe(2.50);
 });
 
-test('ingredient kan aan meerdere pizzas gekoppeld worden', function () {
-    $ingredient = Ingredient::factory()->create();
-    $pizzas = Pizza::factory()->count(3)->create();
+test('ingredient kan bij meerdere pizzas gebruikt worden', function () {
+    $mozzarella = Ingredient::factory()->create();
     
-    $ingredient->pizzas()->attach($pizzas);
+    $margherita = Pizza::factory()->create();
+    $pepperoni = Pizza::factory()->create();
     
-    expect($ingredient->pizzas)->toHaveCount(3);
+    $mozzarella->pizzas()->attach([$margherita->id, $pepperoni->id]);
+    
+    expect($mozzarella->pizzas)->toHaveCount(2);
 });

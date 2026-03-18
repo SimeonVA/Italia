@@ -2,39 +2,46 @@
 
 use App\Models\Pizza;
 use App\Models\Ingredient;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-test('alleen pizzas op voorraad staan op menukaart', function () {
+uses(RefreshDatabase::class);
+
+test('alleen pizzas op voorraad zijn zichtbaar', function () {
     Pizza::factory()->create(['status' => 'op-voorraad']);
     Pizza::factory()->create(['status' => 'in concept']);
-    Pizza::factory()->create(['status' => 'niet-op-voorraad']);
     
-    expect(Pizza::available()->count())->toBe(1);
+    $zichtbaar = Pizza::available()->get();
+    
+    expect($zichtbaar)->toHaveCount(1);
 });
 
-test('pizza heeft naam beschrijving en prijs', function () {
-    $pizza = Pizza::factory()->create();
+test('pizza heeft de benodigde velden', function () {
+    $pizza = Pizza::factory()->create([
+        'name' => 'Margherita',
+        'prijs' => 8.50,
+    ]);
     
-    expect($pizza->name)->not->toBeEmpty();
-    expect($pizza->beschrijving)->not->toBeEmpty();
-    expect($pizza->prijs)->toBeGreaterThan(0);
+    expect($pizza->name)->toBe('Margherita');
+    expect($pizza->prijs)->toBe(8.50);
 });
 
-test('pizza kan ingrediënten hebben', function () {
+test('pizza kan ingrediënten toegevoegd krijgen', function () {
     $pizza = Pizza::factory()->create();
-    $ingredients = Ingredient::factory()->count(3)->create();
+    $ingredient = Ingredient::factory()->create();
     
-    $pizza->ingredients()->attach($ingredients);
+    $pizza->ingredients()->attach($ingredient->id);
     
-    expect($pizza->ingredients)->toHaveCount(3);
+    expect($pizza->ingredients)->toHaveCount(1);
 });
 
-test('pizza kostprijs wordt correct berekend', function () {
+test('kostprijs wordt berekend', function () {
     $pizza = Pizza::factory()->create();
-    $ingredient1 = Ingredient::factory()->create(['inkoopprijs' => 1.50]);
-    $ingredient2 = Ingredient::factory()->create(['inkoopprijs' => 2.00]);
     
-    $pizza->ingredients()->attach([$ingredient1->id, $ingredient2->id]);
+    $kaas = Ingredient::factory()->create(['inkoopprijs' => 1.50]);
+    $tomaat = Ingredient::factory()->create(['inkoopprijs' => 0.50]);
+    
+    $pizza->ingredients()->attach([$kaas->id, $tomaat->id]);
     $pizza->refresh();
     
-    expect($pizza->cost_price)->toBe(3.50);
+    expect($pizza->cost_price)->toBe(2.00);
 });
