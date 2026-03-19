@@ -3,14 +3,30 @@
 use App\Models\Order;
 use App\Models\Pizza;
 use App\Models\Ingredient;
+use App\Models\User;
+use App\Filament\Resources\OrderResource\Pages\CreateOrder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('order kan worden aangemaakt', function () {
-    $order = Order::factory()->create(['status' => 'pending']);
+test('kan order aanmaken via filament', function () {
+    $user = User::factory()->create();
+    $pizza = Pizza::factory()->create(['status' => 'op-voorraad']);
     
-    expect($order->status)->toBe('pending');
+    \Livewire\Livewire::actingAs($user)
+        ->test(CreateOrder::class)
+        ->fillForm([
+            'status' => 'pending',
+            'items' => [
+                ['pizza_id' => $pizza->id, 'quantity' => 2],
+            ],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $this->assertDatabaseHas('orders', [
+        'status' => 'pending',
+    ]);
 });
 
 test('pizzas kunnen aan order toegevoegd worden', function () {
@@ -42,7 +58,6 @@ test('alleen voltooide orders tellen mee voor omzet', function () {
 test('bestellingen van vandaag worden correct geteld', function () {
     Order::factory()->create(['created_at' => now()]);
     Order::factory()->create(['created_at' => now()->subHours(2)]);
-    
     Order::factory()->create(['created_at' => now()->subDay()]);
     
     $vandaag = Order::whereDate('created_at', now()->toDateString())->get();

@@ -3,7 +3,7 @@
 namespace App\Filament\Resources;
 
 use BackedEnum;
-use App\Filament\Resources\PizzaResource\Forms\PizzaForm;
+use App\Filament\Resources\PizzaResource\Schemas\PizzaForm;
 use App\Filament\Resources\PizzaResource\Pages;
 use App\Filament\Resources\PizzaResource\Tables\PizzaTable;
 use App\Models\Pizza;

@@ -2,6 +2,9 @@
 
 use App\Models\Pizza;
 use App\Models\Ingredient;
+use App\Models\User;
+use App\Filament\Resources\PizzaResource\Pages\CreatePizza;
+use App\Filament\Resources\PizzaResource\Pages\EditPizza;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -15,6 +18,50 @@ test('alleen pizzas op voorraad zijn zichtbaar', function () {
     expect($zichtbaar)->toHaveCount(1);
 });
 
+test('kan pizza aanmaken via filament', function () {
+    $user = User::factory()->create();
+    
+    \Livewire\Livewire::actingAs($user)
+        ->test(CreatePizza::class)
+        ->fillForm([
+            'name' => 'Margherita',
+            'beschrijving' => 'Klassieke pizza',
+            'prijs' => 8.50,
+            'status' => 'op-voorraad',
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $this->assertDatabaseHas('pizzas', [
+        'name' => 'Margherita',
+        'prijs' => 8.50,
+    ]);
+});
+
+test('kan ingrediënten toevoegen aan bestaande pizza', function () {
+    $user = User::factory()->create();
+    $pizza = Pizza::create([
+        'name' => 'Margherita',
+        'beschrijving' => 'Test',
+        'prijs' => 8.50,
+        'status' => 'op-voorraad',
+    ]);
+    
+    $ingredient = Ingredient::create([
+        'name' => 'Mozzarella',
+        'inkoopprijs' => 1.50,
+    ]);
+    
+    \Livewire\Livewire::actingAs($user)
+        ->test(\App\Filament\Resources\PizzaResource\Pages\EditPizza::class, ['record' => $pizza->id])
+        ->set('data.ingredients', [$ingredient->id])
+        ->call('save')
+        ->assertHasNoFormErrors();
+    
+    $pizza->refresh();
+    expect($pizza->ingredients)->toHaveCount(1);
+});
+
 test('pizza heeft de benodigde velden', function () {
     $pizza = Pizza::factory()->create([
         'name' => 'Margherita',
@@ -23,15 +70,6 @@ test('pizza heeft de benodigde velden', function () {
     
     expect($pizza->name)->toBe('Margherita');
     expect($pizza->prijs)->toBe(8.50);
-});
-
-test('pizza kan ingrediënten toegevoegd krijgen', function () {
-    $pizza = Pizza::factory()->create();
-    $ingredient = Ingredient::factory()->create();
-    
-    $pizza->ingredients()->attach($ingredient->id);
-    
-    expect($pizza->ingredients)->toHaveCount(1);
 });
 
 test('kostprijs wordt berekend', function () {

@@ -3,7 +3,7 @@
 namespace App\Filament\Resources;
 
 use BackedEnum;
-use App\Filament\Resources\IngredientResource\Forms\IngredientForm;
+use App\Filament\Resources\IngredientResource\Schemas\IngredientForm;
 use App\Filament\Resources\IngredientResource\Pages;
 use App\Filament\Resources\IngredientResource\Tables\IngredientTable;
 use App\Models\Ingredient;
