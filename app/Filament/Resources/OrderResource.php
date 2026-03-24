@@ -20,16 +20,16 @@ class OrderResource extends Resource
     
     protected static ?string $navigationLabel = 'Orders';
 
-    /**
-     * Zorgt ervoor dat klanten alleen hun eigen orders zien,
-     * terwijl de admin alles blijft zien.
-     */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->when(! auth()->user()->is_admin, function (Builder $query) {
-                $query->where('user_id', auth()->id());
-            });
+        $query = parent::getEloquentQuery();
+        
+        // Als user GEEN admin is, alleen eigen orders tonen
+        if (!auth()->user()->is_admin) {
+            return $query->where('created_by', auth()->id());
+        }
+        
+        return $query;
     }
 
     public static function form(Schema $schema): Schema

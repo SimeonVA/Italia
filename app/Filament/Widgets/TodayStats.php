@@ -10,6 +10,16 @@ use Illuminate\Support\HtmlString;
 
 class TodayStats extends StatsOverviewWidget
 {
+    protected function getColumns(): int
+    {
+        return 3;
+    }
+
+    public static function canView(): bool
+    {
+        return auth()->user()?->is_admin ?? false;
+    }
+
     protected function getStats(): array
     {
         $today = Carbon::today();
@@ -23,12 +33,10 @@ class TodayStats extends StatsOverviewWidget
         $ingredientCounts = [];
         foreach ($completedOrders as $order) {
             foreach ($order->pizzas as $pizza) {
+                $quantity = $pizza->pivot->quantity ?? 1;
                 foreach ($pizza->ingredients as $ingredient) {
                     $name = $ingredient->name;
-                    if (!isset($ingredientCounts[$name])) {
-                        $ingredientCounts[$name] = 0;
-                    }
-                    $ingredientCounts[$name] += $pizza->pivot->quantity;
+                    $ingredientCounts[$name] = ($ingredientCounts[$name] ?? 0) + $quantity;
                 }
             }
         }
@@ -36,36 +44,58 @@ class TodayStats extends StatsOverviewWidget
         $pizzaOrderCount = [];
         foreach ($completedOrders as $order) {
             foreach ($order->pizzas as $pizza) {
-                if (!isset($pizzaOrderCount[$pizza->name])) {
-                    $pizzaOrderCount[$pizza->name] = 0;
-                }
-                $pizzaOrderCount[$pizza->name]++;
+                $name = $pizza->name;
+                $quantity = $pizza->pivot->quantity ?? 1;
+                $pizzaOrderCount[$name] = ($pizzaOrderCount[$name] ?? 0) + $quantity;
             }
         }
 
         arsort($pizzaOrderCount);
         $top3 = array_slice($pizzaOrderCount, 0, 3, true);
 
-        $top3Html = '<ol class="list-decimal pl-4">';
-        foreach ($top3 as $name => $orders) {
-            $top3Html .= "<li>{$name}</li>";
+        $top3Html = '<ol class="list-decimal pl-4 mt-2">';
+        foreach ($top3 as $name => $count) {
+            $top3Html .= "<li>{$name} ({$count}x)</li>";
         }
         $top3Html .= '</ol>';
 
-        $ingredientHtml = '<ul class="list-disc pl-4">';
+        arsort($ingredientCounts);
+        $ingredientHtml = '<ul class="list-disc pl-4 mt-2 max-h-40 overflow-y-auto">';
         foreach ($ingredientCounts as $name => $count) {
             $ingredientHtml .= "<li>{$name} ({$count}x)</li>";
         }
         $ingredientHtml .= '</ul>';
 
+        $chartData = $completedOrders->pluck('revenue')->toArray();
+        if (count($chartData) < 2) $chartData = [0, $totalRevenue];
+
         return [
             Stat::make('Aantal bestellingen', $ordersToday->count()),
+
             Stat::make('Lopende bestellingen', $ordersToday->where('status', 'pending')->count()),
-            Stat::make('Totale omzet', '€ ' . number_format($totalRevenue, 2, ',', '.')),
+
+            Stat::make('Top 3 pizza\'s', '')
+                ->description(new HtmlString($top3Html)),
+
+            Stat::make('Totale omzet', '€ ' . number_format($totalRevenue, 2, ',', '.'))
+                ->chart($chartData)
+                ->extraAttributes([
+                    'class' => 'col-span-2',
+                ]),
+
+            Stat::make('Totale winst', '€ ' . number_format($totalProfit, 2, ',', '.'))
+                ->chart($chartData)
+                ->extraAttributes([
+                    'class' => 'col-span-1',
+                ]),
+
             Stat::make('Totale kostprijs', '€ ' . number_format($totalCost, 2, ',', '.')),
-            Stat::make('Totale winst', '€ ' . number_format($totalProfit, 2, ',', '.')),
-            Stat::make('Top 3 pizza\'s', '')->description(new HtmlString($top3Html)),
-            Stat::make('Gebruikte ingrediënten', '')->description(new HtmlString($ingredientHtml)),
+
+            Stat::make('Gebruikte ingrediënten', '')
+                ->description(new HtmlString($ingredientHtml))
+                ->extraAttributes([
+                    'class' => 'col-span-2',
+                ]),
         ];
     }
 }

@@ -19,6 +19,11 @@ class OrderTable
             ->columns([
                 TextColumn::make('id')->label('ID'),
 
+                TextColumn::make('creator.name')  
+                    ->label('Besteld door')
+                    ->sortable()
+                    ->searchable(),
+
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -29,14 +34,17 @@ class OrderTable
                     })
                     ->label('Status'),
 
-                TextColumn::make('bestelde_pizzas')
-                    ->label('Bestelde pizzas')
-                    ->getStateUsing(function (Order $record) {
-                        return $record->pizzas
-                            ->map(fn ($pizza) => $pizza->name . ' (' . $pizza->pivot->quantity . 'x)')
-                            ->join(', ');
-                    })
-                    ->wrap(),
+                TextColumn::make('pizzas_list') // Gebruik een unieke naam die niet in je DB voorkomt
+    ->label('Bestelde pizza\'s')
+    ->state(function (Order $record): string {
+        // We halen de data direct uit de relatie
+        return $record->pizzas->map(function ($pizza) {
+            return "{$pizza->name} ({$pizza->pivot->quantity}x)";
+        })->join(', ');
+    })
+    ->badge() // Optioneel: maakt het visueel iets duidelijker
+    ->color('gray')
+    ->wrap(),
 
                 TextColumn::make('created_at')
                     ->dateTime('d-m-Y H:i')
@@ -52,9 +60,9 @@ class OrderTable
                         ->label('Markeer als voltooid')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn (Collection $records) => $records->each->update(['status' => 'completed'])),
-                        
-                    DeleteBulkAction::make(),
+                        ->visible(fn () => auth()->user()?->is_admin),
+                    DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()?->is_admin),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

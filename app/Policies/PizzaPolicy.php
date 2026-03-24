@@ -9,7 +9,7 @@ class PizzaPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true; // Iedereen mag de kaart zien
+        return $user->is_admin;
     }
 
     public function create(User $user): bool
