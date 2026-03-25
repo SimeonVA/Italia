@@ -1,77 +1,91 @@
 <x-filament-panels::page>
-    <div class="grid grid-cols-12 gap-6 items-start">
-        
-        <div class="col-span-12 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; align-items: start;">
+
+        <div style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             @foreach ($this->pizzas as $pizza)
-                <x-filament::section class="h-full !p-4 !rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex flex-col h-full justify-between">
+                <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.07); overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px;">
+
+                    {{-- Afbeelding --}}
+                    @if($pizza['image'])
+                        <img
+                            src="{{ Storage::url($pizza['image']) }}"
+                            alt="{{ $pizza['name'] }}"
+                            style="width: 100%; height: 160px; object-fit: cover;"
+                        />
+                    @else
+                        <div style="width: 100%; height: 160px; background: #f3f4f6; display: flex; align-items: center; justify-content: center;">
+                            <span style="font-size: 11px; color: #9ca3af;">Geen afbeelding</span>
+                        </div>
+                    @endif
+
+                    {{-- Tekst & knop --}}
+                    <div style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between; flex: 1;">
                         <div>
-                            {{-- Titel met nummer en iconen --}}
-                            <div class="flex items-baseline gap-2 mb-2">
-                                <h2 class="text-[17px] font-extrabold text-gray-900 leading-tight">
-                                    {{ $loop->iteration }}. {{ $pizza['name'] }}
-                                </h2>
-                                <span class="flex gap-1 text-[10px]">🌾 🥛</span>
-                            </div>
-                            
-                            {{-- Beschrijving --}}
-                            <p class="text-gray-500 text-[13px] leading-snug mb-6 line-clamp-3">
+                            <p style="font-size: 16px; font-weight: 800; color: #111827; margin: 0 0 6px 0;">
+                                {{ $loop->iteration }}. {{ $pizza['name'] }}
+                            </p>
+                            <p style="font-size: 13px; color: #9ca3af; line-height: 1.5; margin: 0 0 16px 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
                                 {{ $pizza['beschrijving'] }}
                             </p>
                         </div>
 
-                        {{-- De Groene Badge Knop (Linksonder) --}}
-                        <button wire:click="addToCart({{ $pizza['id'] }})" 
-                                class="w-fit flex items-center gap-2 bg-[#A3BC9E] hover:bg-[#8da388] text-white px-3 py-1 rounded-md font-bold text-[14px] transition shadow-sm">
-                            € {{ number_format($pizza['prijs'], 2, ',', '.') }} 
-                            <x-heroicon-m-plus class="w-4 h-4 text-white/80"/>
+                        <button
+                            wire:click="addToCart({{ $pizza['id'] }})"
+                            style="background: #E05A4E; color: white; font-size: 13px; font-weight: 700; padding: 9px 18px; border-radius: 6px; border: none; cursor: pointer; width: fit-content;"
+                            onmouseover="this.style.background='#c94d42'"
+                            onmouseout="this.style.background='#E05A4E'"
+                        >
+                            € {{ number_format($pizza['prijs'], 2, ',', '.') }} +
                         </button>
                     </div>
-                </x-filament::section>
+
+                </div>
             @endforeach
         </div>
 
-        <div class="col-span-12 lg:col-span-4 sticky top-8">
-            <x-filament::section class="!p-0 shadow-xl border-none rounded-xl overflow-hidden">
-                {{-- Grijze Hoofdknop bovenaan --}}
-                <div class="p-4 bg-white">
-                    <button disabled class="w-full bg-[#B0B0B0] text-white font-bold py-4 rounded-lg text-md shadow-inner cursor-not-allowed uppercase tracking-wide">
+        <div style="position: sticky; top: 32px;">
+            <div style="background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); overflow: hidden;">
+
+                <div style="padding: 16px; border-bottom: 1px solid #f3f4f6;">
+                    <button
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; cursor: {{ empty($cart) ? 'not-allowed' : 'pointer' }}; background: {{ empty($cart) ? '#d1d5db' : '#E05A4E' }}; color: white;">
                         Klik om te bestellen!
                     </button>
                 </div>
 
-                {{-- Status sectie --}}
-                <div class="px-8 py-10 text-center border-b border-gray-50 bg-white">
+                <div style="padding: 20px 24px; border-bottom: 1px solid #f3f4f6; min-height: 90px;">
                     @if(empty($cart))
-                        <p class="font-bold text-[15px] mb-2 text-gray-900 leading-tight">Uw winkelwagen is leeg!</p>
-                        <p class="text-[13px] text-gray-500 leading-relaxed px-2">
+                        <p style="font-size: 13px; font-weight: 700; color: #111827; margin: 0 0 6px 0;">Uw winkelwagen is leeg!</p>
+                        <p style="font-size: 11px; color: #9ca3af; line-height: 1.5; margin: 0;">
                             Klik op het icoontje om gerechten aan uw bestelling toe te voegen.
                         </p>
                     @else
-                        {{-- Hier komen de items zodra je klikt --}}
+                        @foreach($cart as $id => $item)
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+                                <span style="color: #374151;">{{ $item['quantity'] }}× {{ $item['name'] }}</span>
+                                <span style="font-weight: 700; color: #111827;">€ {{ number_format($item['price'] * $item['quantity'], 2, ',', '.') }}</span>
+                            </div>
+                        @endforeach
                     @endif
                 </div>
 
-                {{-- Totaal & Info --}}
-                <div class="p-6 bg-white space-y-5">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-gray-700 text-sm uppercase">Totaal</span>
-                        <span class="font-bold text-gray-900 text-lg">€ {{ number_format($this->total, 2, ',', '.') }}</span>
-                    </div>
-
-                    <div class="flex justify-between items-center text-[12px] text-gray-400 pt-4 border-t border-gray-100">
-                        <span>Bezorging vandaag:</span>
-                        <span class="font-semibold">16:00 - 21:30</span>
-                    </div>
+                <div style="padding: 16px 24px; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Totaal</span>
+                    <span style="font-size: 18px; font-weight: 700; color: #111827;">€ {{ number_format($this->total, 2, ',', '.') }}</span>
                 </div>
 
-                {{-- Footer link --}}
-                <div class="bg-gray-50/50 p-4 text-center">
-                    <a href="#" class="text-gray-400 text-[12px] font-bold underline decoration-dotted hover:text-primary-500 transition">
+                <div style="padding: 12px 24px; display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af;">
+                    <span>Bezorging vandaag:</span>
+                    <span style="font-weight: 600;">16:00 – 21:30</span>
+                </div>
+
+                <div style="padding: 12px 24px; text-align: center; background: #f9fafb;">
+                    <a href="#" style="font-size: 11px; font-weight: 700; color: #9ca3af; text-decoration: underline; text-decoration-style: dotted;">
                         Wil je liever afhalen?
                     </a>
                 </div>
-            </x-filament::section>
+
+            </div>
         </div>
 
     </div>

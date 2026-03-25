@@ -15,6 +15,7 @@ class Pizza extends Model
         'beschrijving',
         'prijs',
         'status',
+        'image',
     ];
 
     protected $casts = [

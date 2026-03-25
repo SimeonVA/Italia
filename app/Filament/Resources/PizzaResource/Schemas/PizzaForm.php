@@ -5,6 +5,7 @@ namespace App\Filament\Resources\PizzaResource\Schemas;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\FileUpload;
 use Filament\Schemas\Schema;
 
 class PizzaForm
@@ -43,6 +44,12 @@ class PizzaForm
                 ->preload()
                 ->searchable()
                 ->label('Ingrediënten'),
+
+            FileUpload::make('image')
+                ->image()
+                ->directory('pizzas')
+                ->imageEditor()
+                ->label('Afbeelding'),
         ]);
     }
 }
