@@ -5,7 +5,8 @@ namespace App\Filament\Pages;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
 use App\Models\Pizza;
-use Illuminate\Support\Facades\Storage;
+use App\Models\Order;
+use App\Models\OrderItem;
 
 class MenuKaart extends Page
 {
@@ -31,7 +32,6 @@ class MenuKaart extends Page
     public function addToCart(int $pizzaId): void
     {
         $pizza = Pizza::find($pizzaId);
-
         if (!$pizza) return;
 
         if (!isset($this->cart[$pizzaId])) {
@@ -62,5 +62,47 @@ class MenuKaart extends Page
             }
             session()->put('cart', $this->cart);
         }
+    }
+
+    public string $customerName = '';
+
+    public function placeOrder(): void
+    {
+        if (empty($this->cart)) return;
+        if (empty($this->customerName)) {
+            Notification::make()
+                ->title('Vul een naam in!')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $customer = Customer::firstOrCreate(
+            ['name' => $this->customerName]
+        );
+
+        $order = Order::create([
+            'status'      => 'pending',
+            'customer_id' => $customer->id,
+            'created_by'  => auth()->id(),
+        ]);
+
+        foreach ($this->cart as $pizzaId => $item) {
+            OrderItem::create([
+                'order_id' => $order->id,
+                'pizza_id' => $pizzaId,
+                'quantity' => $item['quantity'],
+                'price'    => $item['price'],
+            ]);
+        }
+
+        $this->cart = [];
+        $this->customerName = '';
+        session()->forget('cart');
+
+        Notification::make()
+            ->title('Bestelling geplaatst!')
+            ->success()
+            ->send();
     }
 }

@@ -46,10 +46,13 @@ class PizzaForm
                 ->label('Ingrediënten'),
 
             FileUpload::make('image')
-                ->image()
-                ->directory('pizzas')
-                ->imageEditor()
-                ->label('Afbeelding'),
+    ->label('Pizza Foto')
+    ->directory('pizzas')
+    ->disk('public')
+    ->visibility('public')
+    ->image()
+    ->maxSize(5120)
+    ->panelLayout('compact')
         ]);
     }
 }

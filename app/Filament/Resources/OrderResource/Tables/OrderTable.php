@@ -3,13 +3,11 @@
 namespace App\Filament\Resources\OrderResource\Tables;
 
 use App\Models\Order;
-use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Collection;
 
 class OrderTable
 {
@@ -17,12 +15,14 @@ class OrderTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')->label('ID'),
+                TextColumn::make('id')
+                    ->label('ID'),
 
-                TextColumn::make('creator.name')  
-                    ->label('Besteld door')
+                TextColumn::make('customer.name')
+                    ->label('Klant')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->default('-'),
 
                 TextColumn::make('status')
                     ->badge()
@@ -34,17 +34,15 @@ class OrderTable
                     })
                     ->label('Status'),
 
-                TextColumn::make('pizzas_list') // Gebruik een unieke naam die niet in je DB voorkomt
-    ->label('Bestelde pizza\'s')
-    ->state(function (Order $record): string {
-        // We halen de data direct uit de relatie
-        return $record->pizzas->map(function ($pizza) {
-            return "{$pizza->name} ({$pizza->pivot->quantity}x)";
-        })->join(', ');
-    })
-    ->badge() // Optioneel: maakt het visueel iets duidelijker
-    ->color('gray')
-    ->wrap(),
+                TextColumn::make('order_items_list')
+                    ->label('Bestelde pizza\'s')
+                    ->state(function (Order $record): string {
+                        if ($record->orderItems->isEmpty()) return '-';
+                        return $record->orderItems->map(function ($item) {
+                            return "{$item->pizza->name} ({$item->quantity}x)";
+                        })->join(', ');
+                    })
+                    ->wrap(),
 
                 TextColumn::make('created_at')
                     ->dateTime('d-m-Y H:i')
@@ -56,11 +54,6 @@ class OrderTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    BulkAction::make('voltooid')
-                        ->label('Markeer als voltooid')
-                        ->icon('heroicon-o-check-circle')
-                        ->color('success')
-                        ->visible(fn () => auth()->user()?->is_admin),
                     DeleteBulkAction::make()
                         ->visible(fn () => auth()->user()?->is_admin),
                 ]),

@@ -5,10 +5,9 @@
             @foreach ($this->pizzas as $pizza)
                 <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.07); overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px;">
 
-                    {{-- Afbeelding --}}
-                    @if($pizza['image'])
+                    @if(!empty($pizza['image']))
                         <img
-                            src="{{ Storage::url($pizza['image']) }}"
+                            src="{{ asset('storage/' . $pizza['image']) }}"
                             alt="{{ $pizza['name'] }}"
                             style="width: 100%; height: 160px; object-fit: cover;"
                         />
@@ -18,7 +17,6 @@
                         </div>
                     @endif
 
-                    {{-- Tekst & knop --}}
                     <div style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between; flex: 1;">
                         <div>
                             <p style="font-size: 16px; font-weight: 800; color: #111827; margin: 0 0 6px 0;">
@@ -47,7 +45,14 @@
             <div style="background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); overflow: hidden;">
 
                 <div style="padding: 16px; border-bottom: 1px solid #f3f4f6;">
+                    <input
+                        wire:model="customerName"
+                        type="text"
+                        placeholder="Naam klant..."
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; margin-bottom: 10px; outline: none; box-sizing: border-box;"
+                    />
                     <button
+                        wire:click="placeOrder"
                         style="width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; cursor: {{ empty($cart) ? 'not-allowed' : 'pointer' }}; background: {{ empty($cart) ? '#d1d5db' : '#E05A4E' }}; color: white;">
                         Klik om te bestellen!
                     </button>
@@ -67,7 +72,7 @@
                             </div>
                         @endforeach
                     @endif
-                </div>
+                </div> 
 
                 <div style="padding: 16px 24px; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Totaal</span>

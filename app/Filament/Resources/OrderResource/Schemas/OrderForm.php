@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\OrderResource\Schemas;
 
+use App\Models\Customer;
 use App\Models\Pizza;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Repeater;
@@ -13,6 +14,12 @@ class OrderForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
+            Select::make('customer_id')
+                ->label('Klant')
+                ->options(Customer::pluck('name', 'id'))
+                ->searchable()
+                ->required(),
+
             Select::make('status')
                 ->options([
                     'pending' => 'Pending',
@@ -22,14 +29,20 @@ class OrderForm
                 ->default('pending')
                 ->required(),
 
-            Repeater::make('items')
+            Repeater::make('orderItems')
                 ->label('Bestelde pizzas')
+                ->relationship('orderItems')
                 ->schema([
                     Select::make('pizza_id')
                         ->label('Pizza')
                         ->options(Pizza::where('status', 'op-voorraad')->pluck('name', 'id'))
                         ->searchable()
-                        ->required(),
+                        ->required()
+                        ->reactive()
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            $pizza = Pizza::find($state);
+                            if ($pizza) $set('price', $pizza->prijs);
+                        }),
 
                     TextInput::make('quantity')
                         ->label('Aantal')
@@ -37,8 +50,14 @@ class OrderForm
                         ->minValue(1)
                         ->default(1)
                         ->required(),
+
+                    TextInput::make('price')
+                        ->label('Prijs')
+                        ->numeric()
+                        ->prefix('€')
+                        ->required(),
                 ])
-                ->columns(2)
+                ->columns(3)
                 ->minItems(1)
                 ->addActionLabel('Pizza toevoegen'),
         ]);

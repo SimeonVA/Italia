@@ -23,7 +23,7 @@ class TodayStats extends StatsOverviewWidget
     protected function getStats(): array
     {
         $today = Carbon::today();
-        $ordersToday = Order::with('pizzas.ingredients')->whereDate('created_at', $today)->get();
+        $ordersToday = Order::with('orderItems.pizza.ingredients')->whereDate('created_at', $today)->get();
         $completedOrders = $ordersToday->where('status', 'completed');
 
         $totalRevenue = $completedOrders->sum->revenue;
@@ -32,21 +32,19 @@ class TodayStats extends StatsOverviewWidget
 
         $ingredientCounts = [];
         foreach ($completedOrders as $order) {
-            foreach ($order->pizzas as $pizza) {
-                $quantity = $pizza->pivot->quantity ?? 1;
-                foreach ($pizza->ingredients as $ingredient) {
+            foreach ($order->orderItems as $item) {
+                foreach ($item->pizza->ingredients as $ingredient) {
                     $name = $ingredient->name;
-                    $ingredientCounts[$name] = ($ingredientCounts[$name] ?? 0) + $quantity;
+                    $ingredientCounts[$name] = ($ingredientCounts[$name] ?? 0) + $item->quantity;
                 }
             }
         }
 
         $pizzaOrderCount = [];
         foreach ($completedOrders as $order) {
-            foreach ($order->pizzas as $pizza) {
-                $name = $pizza->name;
-                $quantity = $pizza->pivot->quantity ?? 1;
-                $pizzaOrderCount[$name] = ($pizzaOrderCount[$name] ?? 0) + $quantity;
+            foreach ($order->orderItems as $item) {
+                $name = $item->pizza->name;
+                $pizzaOrderCount[$name] = ($pizzaOrderCount[$name] ?? 0) + $item->quantity;
             }
         }
 
@@ -79,23 +77,17 @@ class TodayStats extends StatsOverviewWidget
 
             Stat::make('Totale omzet', '€ ' . number_format($totalRevenue, 2, ',', '.'))
                 ->chart($chartData)
-                ->extraAttributes([
-                    'class' => 'col-span-2',
-                ]),
+                ->extraAttributes(['class' => 'col-span-2']),
 
             Stat::make('Totale winst', '€ ' . number_format($totalProfit, 2, ',', '.'))
                 ->chart($chartData)
-                ->extraAttributes([
-                    'class' => 'col-span-1',
-                ]),
+                ->extraAttributes(['class' => 'col-span-1']),
 
             Stat::make('Totale kostprijs', '€ ' . number_format($totalCost, 2, ',', '.')),
 
             Stat::make('Gebruikte ingrediënten', '')
                 ->description(new HtmlString($ingredientHtml))
-                ->extraAttributes([
-                    'class' => 'col-span-2',
-                ]),
+                ->extraAttributes(['class' => 'col-span-2']),
         ];
     }
 }
