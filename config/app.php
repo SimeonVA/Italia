@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Europe/Amsterdam'),
 
     /*
     |--------------------------------------------------------------------------
@@ -124,5 +124,7 @@ return [
 
         'image_driver' => 'gd',
     ],
+
+    
 
 ];

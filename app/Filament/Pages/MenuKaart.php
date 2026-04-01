@@ -5,8 +5,7 @@ namespace App\Filament\Pages;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
 use App\Models\Pizza;
-use App\Models\Order;
-use App\Models\OrderItem;
+use Carbon\Carbon;
 
 class MenuKaart extends Page
 {
@@ -17,11 +16,26 @@ class MenuKaart extends Page
 
     public array $pizzas = [];
     public array $cart = [];
+    public string $customerName = '';
 
     public function mount(): void
     {
         $this->pizzas = Pizza::where('status', 'op-voorraad')->get()->toArray();
         $this->cart = session()->get('cart', []);
+    }
+
+    public function isOpen(): bool
+    {
+        $nu = Carbon::now();
+        return $nu->between(
+            Carbon::today()->setTimeFromTimeString('12:00'),
+            Carbon::today()->setTimeFromTimeString('21:30')
+        );
+    }
+
+    public function getVerwachteTijdProperty(): string
+    {
+        return Carbon::now()->addMinutes(30)->format('H:i');
     }
 
     public function getTotalProperty(): float
@@ -31,6 +45,11 @@ class MenuKaart extends Page
 
     public function addToCart(int $pizzaId): void
     {
+        if (!$this->isOpen()) {
+            $this->gesloten();
+            return;
+        }
+
         $pizza = Pizza::find($pizzaId);
         if (!$pizza) return;
 
@@ -54,55 +73,35 @@ class MenuKaart extends Page
 
     public function removeFromCart(int $pizzaId): void
     {
-        if (isset($this->cart[$pizzaId])) {
-            if ($this->cart[$pizzaId]['quantity'] > 1) {
-                $this->cart[$pizzaId]['quantity']--;
-            } else {
-                unset($this->cart[$pizzaId]);
-            }
-            session()->put('cart', $this->cart);
-        }
-    }
+        if (!isset($this->cart[$pizzaId])) return;
 
-    public string $customerName = '';
+        if ($this->cart[$pizzaId]['quantity'] > 1) {
+            $this->cart[$pizzaId]['quantity']--;
+        } else {
+            unset($this->cart[$pizzaId]);
+        }
+
+        session()->put('cart', $this->cart);
+    }
 
     public function placeOrder(): void
     {
         if (empty($this->cart)) return;
-        if (empty($this->customerName)) {
-            Notification::make()
-                ->title('Vul een naam in!')
-                ->danger()
-                ->send();
+
+        if (!$this->isOpen()) {
+            $this->gesloten();
             return;
         }
 
-        $customer = Customer::firstOrCreate(
-            ['name' => $this->customerName]
-        );
+        redirect()->to('/admin/orders/create');
+    }
 
-        $order = Order::create([
-            'status'      => 'pending',
-            'customer_id' => $customer->id,
-            'created_by'  => auth()->id(),
-        ]);
-
-        foreach ($this->cart as $pizzaId => $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'pizza_id' => $pizzaId,
-                'quantity' => $item['quantity'],
-                'price'    => $item['price'],
-            ]);
-        }
-
-        $this->cart = [];
-        $this->customerName = '';
-        session()->forget('cart');
-
+    private function gesloten(): void
+    {
         Notification::make()
-            ->title('Bestelling geplaatst!')
-            ->success()
+            ->title('Gesloten!')
+            ->body('We zijn momenteel gesloten. Openingstijden: 15:00 – 21:30')
+            ->danger()
             ->send();
     }
 }
